@@ -1426,3 +1426,33 @@ function getFilenameFromUrl(url) {
     return `image-${timestamp}.png`;
   }
 }
+(function() {
+  // Hàm khởi tạo công cụ dịch của Google
+  window.googleTranslateElementInit = function() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'auto', 
+      includedLanguages: 'vi', // Chỉ định ngôn ngữ dịch là tiếng Việt
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+
+    // Tự động giả lập chọn tiếng Việt sau khi thanh dịch tải xong
+    setTimeout(function() {
+      var selectElem = document.querySelector('.goog-te-combo');
+      if (selectElem) {
+        selectElem.value = 'vi';
+        selectElem.dispatchEvent(new Event('change'));
+      }
+    }, 1500);
+  };
+
+  // Tự động tải script của Google Translate khi ứng dụng chạy
+  var script = document.createElement('script');
+  script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  document.head.appendChild(script);
+
+  // Tạo thẻ div ẩn để chứa thanh công cụ dịch, giúp giao diện gọn gàng
+  var div = document.createElement('div');
+  div.id = 'google_translate_element';
+  div.style.display = 'none'; 
+  document.body.appendChild(div);
+})();
