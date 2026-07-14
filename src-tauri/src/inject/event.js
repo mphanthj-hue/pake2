@@ -1460,13 +1460,15 @@ function getFilenameFromUrl(url) {
   div.style.display = "none";
   document.body.appendChild(div);
 })();
-(function() {
+(function () {
   // 1. Mẹo Max Ping: Ép Cookie dịch ngay lập tức trước khi tải trang để kích hoạt dịch thần tốc
   try {
     const cookieValue = "/auto/vi";
     document.cookie = `googtrans=${cookieValue}; path=/;`;
     document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname};`;
-  } catch (e) { console.error("[Pake-Translate]", e); }
+  } catch (e) {
+    console.error("[Pake-Translate]", e);
+  }
 
   // 2. Xóa giao diện rác: Ẩn sạch các thanh Banner, bong bóng gợi ý và viền vàng của Google để app chuẩn Native
   const css = `
@@ -1474,26 +1476,29 @@ function getFilenameFromUrl(url) {
     body { top: 0 !important; }
     font { background-color: transparent !important; box-shadow: none !important; color: inherit !important; }
   `;
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.innerHTML = css;
   document.head.appendChild(style);
 
   // 3. Khởi tạo Google Translate
-  window.googleTranslateElementInit = function() {
-    new google.translate.TranslateElement({
-      pageLanguage: 'auto',
-      includedLanguages: 'vi',
-      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
+  window.googleTranslateElementInit = function () {
+    new google.translate.TranslateElement(
+      {
+        pageLanguage: "auto",
+        includedLanguages: "vi",
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+      },
+      "google_translate_element",
+    );
 
     // Vòng lặp quét siêu tốc (mỗi 100ms) để ép kích hoạt nếu cookie phản hồi chậm
     let retryCount = 0;
     const checkInterval = setInterval(() => {
-      const selectElem = document.querySelector('.goog-te-combo');
+      const selectElem = document.querySelector(".goog-te-combo");
       if (selectElem) {
-        if (selectElem.value !== 'vi') {
-          selectElem.value = 'vi';
-          selectElem.dispatchEvent(new Event('change'));
+        if (selectElem.value !== "vi") {
+          selectElem.value = "vi";
+          selectElem.dispatchEvent(new Event("change"));
         }
         clearInterval(checkInterval);
       }
@@ -1502,14 +1507,15 @@ function getFilenameFromUrl(url) {
   };
 
   // 4. Tải Script dịch (Chế độ bất đồng bộ async để không làm chậm app)
-  const script = document.createElement('script');
-  script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  const script = document.createElement("script");
+  script.src =
+    "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
   script.async = true;
   document.head.appendChild(script);
 
   // 5. Tạo thẻ div cấu hình ẩn
-  const div = document.createElement('div');
-  div.id = 'google_translate_element';
-  div.style.display = 'none';
+  const div = document.createElement("div");
+  div.id = "google_translate_element";
+  div.style.display = "none";
   document.body.appendChild(div);
 })();
