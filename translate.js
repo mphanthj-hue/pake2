@@ -27,7 +27,8 @@
   };
 
   var script = document.createElement("script");
-  script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+  script.src =
+    "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
   document.head.appendChild(script);
 
   // 2. Chống dịch các thẻ codebox, khối lệnh dev và các thẻ kỹ thuật
