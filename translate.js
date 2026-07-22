@@ -27,7 +27,7 @@
   };
 
   var script = document.createElement("script");
-  script.src = "//://google.com";
+  script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
   document.head.appendChild(script);
 
   // 2. Chống dịch các thẻ codebox, khối lệnh dev và các thẻ kỹ thuật
@@ -36,7 +36,7 @@
         code, pre, .codebox, [class*="code"], [class*="dev"], pre *, code * {
             notranslate: yes !important;
         }
-        .goog-te-banner-frame { display: none !important; } /* Ẩn thanh thông báo của Google ở đỉnh app */
+        .goog-te-banner-frame { display: none !important; }
         body { top: 0px !important; }
     `;
   document.head.appendChild(style);
@@ -55,7 +55,7 @@
   // 3. Tối ưu hóa hiệu năng: Cuộn đến đâu dịch đến đó (Chỉ dịch các thành phần DOM mới xuất hiện)
   protectCodeBlocks();
   var observer = new MutationObserver(function (mutations) {
-    protectCodeBlocks(); // Bảo vệ các đoạn codebox mới được render khi cuộn trang
+    protectCodeBlocks();
   });
 
   observer.observe(document.body, {
