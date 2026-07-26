@@ -10,7 +10,7 @@ on:
       platform:
         description: "Platform"
         required: true
-        default: "macos-latest"
+        default: "windows-latest"
         type: choice
         options:
           - "windows-latest"
@@ -23,8 +23,13 @@ on:
         description: "App name (lowercase for Linux)"
         required: true
       icon:
-        description: "Icon URL, auto-fetch if empty"
+        description: "Icon URL (auto-fetch if empty)"
         required: false
+      config:
+        description: "Path to JSON config file (advanced)"
+        required: false
+
+      # ----- WINDOW SETTINGS -----
       width:
         description: "Window width (px)"
         required: false
@@ -39,12 +44,13 @@ on:
       min_height:
         description: "Minimum window height (px)"
         required: false
-      app_version:
-        description: "App version"
-        required: false
-        default: "1.0.0"
       fullscreen:
         description: "Start in fullscreen mode"
+        required: false
+        type: boolean
+        default: false
+      maximize:
+        description: "Start with maximized window"
         required: false
         type: boolean
         default: false
@@ -53,15 +59,180 @@ on:
         required: false
         type: boolean
         default: false
-      multi_arch:
-        description: "Universal binary (macOS only)"
+      hide_window_decorations:
+        description: "Hide native window decorations (Windows/Linux)"
         required: false
         type: boolean
         default: false
-      targets:
-        description: "Package formats (comma-separated: deb,appimage,rpm,zst)"
+      always_on_top:
+        description: "Keep window always on top"
         required: false
-        default: "deb"
+        type: boolean
+        default: false
+      title:
+        description: "Custom window title bar text"
+        required: false
+
+      # ----- BEHAVIOR -----
+      incognito:
+        description: "Launch in incognito/private mode (no cookies/storage)"
+        required: false
+        type: boolean
+        default: false
+      multi_instance:
+        description: "Allow running multiple instances simultaneously"
+        required: false
+        type: boolean
+        default: false
+      multi_window:
+        description: "Allow opening multiple windows in one instance"
+        required: false
+        type: boolean
+        default: false
+      new_window:
+        description: "Allow sites to open new windows (e.g. auth popups)"
+        required: false
+        type: boolean
+        default: false
+      force_internal_navigation:
+        description: "Keep ALL links inside the app window"
+        required: false
+        type: boolean
+        default: false
+      internal_url_regex:
+        description: "Custom regex for internal URL matching"
+        required: false
+      safe_domain:
+        description: "Comma-separated trusted domains (e.g. slack.com,okta.com)"
+        required: false
+      disabled_web_shortcuts:
+        description: "Disable browser keyboard shortcuts"
+        required: false
+        type: boolean
+        default: false
+      enable_find:
+        description: "Enable in-page Find UI (Cmd/Ctrl+F)"
+        required: false
+        type: boolean
+        default: false
+      enable_drag_drop:
+        description: "Enable native drag and drop"
+        required: false
+        type: boolean
+        default: false
+      activation_shortcut:
+        description: "Custom activation shortcut (e.g. CmdOrControl+Shift+P)"
+        required: false
+
+      # ----- APPEARANCE -----
+      dark_mode:
+        description: "Force dark mode"
+        required: false
+        type: boolean
+        default: false
+      zoom:
+        description: "Initial zoom level (50-200, default 100)"
+        required: false
+      show_system_tray:
+        description: "Show app in system tray"
+        required: false
+        type: boolean
+        default: false
+      system_tray_icon:
+        description: "System tray icon path (requires show_system_tray)"
+        required: false
+      hide_on_close:
+        description: "Hide to tray on close (true/false, platform-specific default)"
+        required: false
+      start_to_tray:
+        description: "Start minimized to tray (requires show_system_tray)"
+        required: false
+        type: boolean
+        default: false
+
+      # ----- NETWORK & SECURITY -----
+      proxy_url:
+        description: "Proxy URL (e.g. http://127.0.0.1:7890)"
+        required: false
+      user_agent:
+        description: "Custom browser user agent"
+        required: false
+      ignore_certificate_errors:
+        description: "Ignore TLS certificate errors (intranet/self-signed)"
+        required: false
+        type: boolean
+        default: false
+      wasm:
+        description: "Enable WebAssembly + cross-origin isolation (for Flutter Web etc.)"
+        required: false
+        type: boolean
+        default: false
+
+      # ----- DEBUG & BUILD -----
+      debug:
+        description: "Enable developer tools and detailed logging"
+        required: false
+        type: boolean
+        default: false
+      iterative_build:
+        description: "Rapid build mode (app only, no installer)"
+        required: false
+        type: boolean
+        default: false
+      no_bundle:
+        description: "Skip packaging, output only executable (Linux only)"
+        required: false
+        type: boolean
+        default: false
+      keep_binary:
+        description: "Keep standalone binary alongside installer"
+        required: false
+        type: boolean
+        default: false
+
+      # ----- PACKAGING -----
+      targets:
+        description: "Build targets (comma-separated). Linux: deb,appimage,rpm,zst | macOS: dmg,app,universal | Windows: msi,x64,arm64"
+        required: false
+      multi_arch:
+        description: "Universal binary (macOS: Intel + Apple Silicon)"
+        required: false
+        type: boolean
+        default: false
+      app_version:
+        description: "App version number"
+        required: false
+        default: "1.0.0"
+      installer_language:
+        description: "Windows MSI language (e.g. zh-CN, ja-JP, en-US)"
+        required: false
+      install:
+        description: "Install macOS app to /Applications (macOS only)"
+        required: false
+        type: boolean
+        default: false
+
+      # ----- MEDIA (macOS) -----
+      camera:
+        description: "Request camera access (macOS entitlement)"
+        required: false
+        type: boolean
+        default: false
+      microphone:
+        description: "Request microphone access (macOS entitlement)"
+        required: false
+        type: boolean
+        default: false
+
+      # ----- INJECTION & LOCAL -----
+      inject:
+        description: "Inject local CSS/JS files (comma-separated paths)"
+        required: false
+      use_local_file:
+        description: "Recursive copy for local file packaging"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -103,99 +274,93 @@ jobs:
             src-tauri/target/
           key: ${{ runner.os }}-cargo-pake-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build App (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Build JSON config and run Pake
         timeout-minutes: 25
         shell: bash
         run: |
-          ARGS=("${{ inputs.url }}" "--name" "${{ inputs.name }}")
-
-          if [ -n "${{ inputs.icon }}" ]; then
-            ARGS+=("--icon" "${{ inputs.icon }}")
-          fi
-
-          if [ -n "${{ inputs.width }}" ]; then
-            ARGS+=("--width" "${{ inputs.width }}")
-          fi
-
-          if [ -n "${{ inputs.height }}" ]; then
-            ARGS+=("--height" "${{ inputs.height }}")
-          fi
-
-          if [ -n "${{ inputs.min_width }}" ]; then
-            ARGS+=("--min-width" "${{ inputs.min_width }}")
-          fi
-
-          if [ -n "${{ inputs.min_height }}" ]; then
-            ARGS+=("--min-height" "${{ inputs.min_height }}")
-          fi
-
-          if [ -n "${{ inputs.app_version }}" ]; then
-            ARGS+=("--app-version" "${{ inputs.app_version }}")
-          fi
-
-          if [ "${{ inputs.fullscreen }}" == "true" ]; then
-            ARGS+=("--fullscreen")
-          fi
-
-          if [ "${{ inputs.hide_title_bar }}" == "true" ]; then
-            ARGS+=("--hide-title-bar")
-          fi
-
-          if [ "${{ inputs.multi_arch }}" == "true" ]; then
-            ARGS+=("--multi-arch")
-          fi
-
-          if [ -n "${{ inputs.targets }}" ] && [ "${{ runner.os }}" == "Linux" ]; then
-            ARGS+=("--targets" "${{ inputs.targets }}")
-          fi
-
-          echo "Running: node dist/cli.js ${ARGS[@]}"
-          node dist/cli.js "${ARGS[@]}"
-
-      - name: Build App (Windows)
-        if: runner.os == 'Windows'
-        timeout-minutes: 25
-        shell: pwsh
-        run: |
-          $args = "${{ inputs.url }}", "--name", "${{ inputs.name }}"
-
-          if ("${{ inputs.icon }}" -ne "") {
-            $args += "--icon", "${{ inputs.icon }}"
-          }
-
-          if ("${{ inputs.width }}" -ne "") {
-            $args += "--width", "${{ inputs.width }}"
-          }
-
-          if ("${{ inputs.height }}" -ne "") {
-            $args += "--height", "${{ inputs.height }}"
-          }
-
-          if ("${{ inputs.min_width }}" -ne "") {
-            $args += "--min-width", "${{ inputs.min_width }}"
-          }
-
-          if ("${{ inputs.min_height }}" -ne "") {
-            $args += "--min-height", "${{ inputs.min_height }}"
-          }
-
-          if ("${{ inputs.app_version }}" -ne "") {
-            $args += "--app-version", "${{ inputs.app_version }}"
-          }
-
-          if ("${{ inputs.fullscreen }}" -eq "true") {
-            $args += "--fullscreen"
-          }
-
-          if ("${{ inputs.hide_title_bar }}" -eq "true") {
-            $args += "--hide-title-bar"
-          }
-
-          Write-Host "Running: node dist/cli.js $($args -join ' ')"
-          node dist/cli.js $args
-
-          git checkout -- src-tauri/Cargo.lock
+          CONFIG_FILE=$(mktemp /tmp/pake-config-XXXXXX.json)
+          
+          jq -n \
+            --arg url "${{ inputs.url }}" \
+            --arg name "${{ inputs.name }}" \
+            '{$url, $name}' > "$CONFIG_FILE"
+          
+          # Window
+          [ -n "${{ inputs.width }}" ] && jq --arg v "${{ inputs.width }}" '.width = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.height }}" ] && jq --arg v "${{ inputs.height }}" '.height = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.min_width }}" ] && jq --arg v "${{ inputs.min_width }}" '."min-width" = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.min_height }}" ] && jq --arg v "${{ inputs.min_height }}" '."min-height" = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.title }}" ] && jq --arg v "${{ inputs.title }}" '.title = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Booleans - window
+          [ "${{ inputs.fullscreen }}" == "true" ] && jq '.fullscreen = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.maximize }}" == "true" ] && jq '.maximize = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.hide_title_bar }}" == "true" ] && jq '."hide-title-bar" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.hide_window_decorations }}" == "true" ] && jq '."hide-window-decorations" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.always_on_top }}" == "true" ] && jq '."always-on-top" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Icon
+          [ -n "${{ inputs.icon }}" ] && jq --arg v "${{ inputs.icon }}" '.icon = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # App version
+          [ -n "${{ inputs.app_version }}" ] && jq --arg v "${{ inputs.app_version }}" '."app-version" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Behavior booleans
+          [ "${{ inputs.incognito }}" == "true" ] && jq '.incognito = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.multi_instance }}" == "true" ] && jq '."multi-instance" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.multi_window }}" == "true" ] && jq '."multi-window" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.new_window }}" == "true" ] && jq '."new-window" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.force_internal_navigation }}" == "true" ] && jq '."force-internal-navigation" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.disabled_web_shortcuts }}" == "true" ] && jq '."disabled-web-shortcuts" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.enable_find }}" == "true" ] && jq '."enable-find" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.enable_drag_drop }}" == "true" ] && jq '."enable-drag-drop" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # String behavior
+          [ -n "${{ inputs.internal_url_regex }}" ] && jq --arg v "${{ inputs.internal_url_regex }}" '."internal-url-regex" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.safe_domain }}" ] && jq --arg v "${{ inputs.safe_domain }}" '."safe-domain" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.activation_shortcut }}" ] && jq --arg v "${{ inputs.activation_shortcut }}" '."activation-shortcut" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Appearance
+          [ "${{ inputs.dark_mode }}" == "true" ] && jq '."dark-mode" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.zoom }}" ] && jq --arg v "${{ inputs.zoom }}" '.zoom = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.show_system_tray }}" == "true" ] && jq '."show-system-tray" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.system_tray_icon }}" ] && jq --arg v "${{ inputs.system_tray_icon }}" '."system-tray-icon" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.hide_on_close }}" ] && jq --arg v "${{ inputs.hide_on_close }}" '."hide-on-close" = ($v == "true")' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.start_to_tray }}" == "true" ] && jq '."start-to-tray" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Network
+          [ -n "${{ inputs.proxy_url }}" ] && jq --arg v "${{ inputs.proxy_url }}" '."proxy-url" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.user_agent }}" ] && jq --arg v "${{ inputs.user_agent }}" '."user-agent" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.ignore_certificate_errors }}" == "true" ] && jq '."ignore-certificate-errors" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.wasm }}" == "true" ] && jq '.wasm = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Debug & Build
+          [ "${{ inputs.debug }}" == "true" ] && jq '.debug = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.iterative_build }}" == "true" ] && jq '."iterative-build" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.no_bundle }}" == "true" ] && jq '."no-bundle" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.keep_binary }}" == "true" ] && jq '."keep-binary" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Packaging
+          [ -n "${{ inputs.targets }}" ] && jq --arg v "${{ inputs.targets }}" '.targets = ($v | split(","))' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.multi_arch }}" == "true" ] && jq '."multi-arch" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.installer_language }}" ] && jq --arg v "${{ inputs.installer_language }}" '."installer-language" = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.install }}" == "true" ] && jq '.install = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Media
+          [ "${{ inputs.camera }}" == "true" ] && jq '.camera = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.microphone }}" == "true" ] && jq '.microphone = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          # Inject & Local
+          [ -n "${{ inputs.inject }}" ] && jq --arg v "${{ inputs.inject }}" '.inject = ($v | split(","))' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.use_local_file }}" == "true" ] && jq '."use-local-file" = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          
+          echo "=== Pake Config ==="
+          cat "$CONFIG_FILE"
+          echo "==================="
+          
+          node dist/cli.js --config "$CONFIG_FILE"
+          
+          rm -f "$CONFIG_FILE"
 
       - name: Upload DMG (macOS)
         if: runner.os == 'macOS'
