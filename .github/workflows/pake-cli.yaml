@@ -225,7 +225,7 @@ jobs:
 
       - name: Send Telegram notification (success)
         if: steps.check_telegram.outputs.configured == 'true' && !cancelled() && success()
-        uses: appleboy/telegram-action@v1.1.0
+        uses: appleboy/telegram-action@v1.0.1
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
@@ -242,7 +242,7 @@ jobs:
 
       - name: Send Telegram notification (failure)
         if: steps.check_telegram.outputs.configured == 'true' && failure()
-        uses: appleboy/telegram-action@v1.1.0
+        uses: appleboy/telegram-action@v1.0.1
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
