@@ -362,6 +362,136 @@ jobs:
           
           rm -f "$CONFIG_FILE"
 
+      - name: Send Telegram notification (success)
+        if: ${{ !cancelled() && success() && secrets.TELEGRAM_TOKEN != '' }}
+        uses: appleboy/telegram-action@v1.1.0
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ✅ *Build thành công!*
+            
+            *App*: ${{ inputs.name }}
+            *URL*: ${{ inputs.url }}
+            *Platform*: ${{ inputs.platform }}
+            
+            ⏱️ ${{ github.run_id }}
+            🔗 [Xem chi tiết](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Send Telegram notification (failure)
+        if: ${{ failure() && secrets.TELEGRAM_TOKEN != '' }}
+        uses: appleboy/telegram-action@v1.1.0
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            ❌ *Build thất bại!*
+            
+            *App*: ${{ inputs.name }}
+            *Platform*: ${{ inputs.platform }}
+            
+            🔗 [Xem log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Upload standalone binary
+        if: ${{ inputs.keep_binary == 'true' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-binary-${{ runner.os }}
+          path: |
+            ${{ inputs.name }}-binary
+            ${{ inputs.name }}.exe
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload macOS .app (iterative/debug)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-macOS-app
+          path: ${{ inputs.name }}.app
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload DMG (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-macOS
+          path: ${{ inputs.name }}.dmg
+          retention-days: 3
+
+      - name: Upload DEB (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-Linux-deb
+          path: ${{ inputs.name }}.deb
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload AppImage (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-Linux-AppImage
+          path: ${{ inputs.name }}.AppImage
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload RPM (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-Linux-rpm
+          path: ${{ inputs.name }}.rpm
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload ZST (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-Linux-zst
+          path: ${{ inputs.name }}-*.pkg.tar.zst
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload MSI (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.name }}-Windows
+          path: ${{ inputs.name }}.msi
+          retention-days: 3
+
+      - name: Generate build summary
+        if: always()
+        run: |
+          echo "## 📱 Build Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Detail |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **App Name** | ${{ inputs.name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **URL** | ${{ inputs.url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Platform** | ${{ inputs.platform }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | ${{ inputs.app_version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Fullscreen** | ${{ inputs.fullscreen }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Result** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Rust cache store
+        uses: actions/cache/save@v4.2.0
+        if: steps.cache_store.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-pake-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Upload DMG (macOS)
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v6
