@@ -19,7 +19,9 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": ["https://github.com/mphanthj-hue/pake2/releases/latest/download/updater.json"],
+      "endpoints": [
+        "https://github.com/mphanthj-hue/pake2/releases/latest/download/updater.json"
+      ],
       "pubkey": ""
     }
   }
