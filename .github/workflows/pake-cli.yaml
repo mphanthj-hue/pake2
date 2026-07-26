@@ -362,8 +362,18 @@ jobs:
           
           rm -f "$CONFIG_FILE"
 
+      - name: Check Telegram configuration
+        id: check_telegram
+        run: |
+          if [ -n "${{ secrets.TELEGRAM_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
       - name: Send Telegram notification (success)
-        if: ${{ !cancelled() && success() && secrets.TELEGRAM_TOKEN != '' }}
+        if: steps.check_telegram.outputs.configured == 'true' && !cancelled() && success()
         uses: appleboy/telegram-action@v1.1.0
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -380,7 +390,7 @@ jobs:
             🔗 [Xem chi tiết](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: Send Telegram notification (failure)
-        if: ${{ failure() && secrets.TELEGRAM_TOKEN != '' }}
+        if: steps.check_telegram.outputs.configured == 'true' && failure()
         uses: appleboy/telegram-action@v1.1.0
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
