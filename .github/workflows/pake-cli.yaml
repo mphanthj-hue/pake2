@@ -9,7 +9,7 @@ on:
     inputs:
       # ═══ CORE ═══
       platform:
-        description: "Platform"
+        description: "Build platform"
         required: true
         default: "windows-latest"
         type: choice
@@ -18,13 +18,13 @@ on:
           - "macos-latest"
           - "ubuntu-24.04"
       url:
-        description: "Website URL"
+        description: "Website URL to package"
         required: true
       name:
         description: "App name (lowercase for Linux)"
         required: true
-      icon:
-        description: "Icon URL (auto-fetch if empty)"
+      title:
+        description: "Window title (defaults to app name)"
         required: false
       app_version:
         description: "App version"
@@ -40,31 +40,18 @@ on:
         description: "Window height (px)"
         required: false
         default: "780"
-      fullscreen:
-        description: "Start in fullscreen mode"
-        required: false
-        type: boolean
-        default: false
       maximize:
-        description: "Start with maximized window"
+        description: "Start maximized"
         required: false
         type: boolean
         default: false
-      hide_title_bar:
-        description: "Hide title bar (macOS)"
+      dark_mode:
+        description: "Force dark mode"
         required: false
         type: boolean
         default: false
-      always_on_top:
-        description: "Keep window always on top"
-        required: false
-        type: boolean
-        default: false
-      title:
-        description: "Custom window title"
-        required: false
 
-      # ═══ BEHAVIOR ═══
+      # ═══ NAVIGATION ═══
       incognito:
         description: "Private mode (no cookies/storage)"
         required: false
@@ -72,6 +59,11 @@ on:
         default: false
       multi_window:
         description: "Allow multiple windows"
+        required: false
+        type: boolean
+        default: false
+      new_window:
+        description: "Allow sites to open new windows"
         required: false
         type: boolean
         default: false
@@ -83,84 +75,60 @@ on:
       safe_domain:
         description: "Comma-separated trusted domains"
         required: false
-      dark_mode:
-        description: "Force dark mode"
-        required: false
-        type: boolean
-        default: false
+
+      # ═══ TRAY ═══
       show_system_tray:
         description: "Show system tray icon"
         required: false
         type: boolean
         default: false
-
-      # ═══ NETWORK ═══
-      proxy_url:
-        description: "Proxy URL (e.g. http://127.0.0.1:7890)"
-        required: false
-      user_agent:
-        description: "Custom browser user agent"
-        required: false
-
-      # ═══ BUILD ═══
-      debug:
-        description: "Enable dev tools + detailed logging"
-        required: false
-        type: boolean
-        default: false
-      keep_binary:
-        description: "Keep standalone binary alongside installer"
-        required: false
-        type: boolean
-        default: false
-      targets:
-        description: "Linux: deb,appimage,rpm,zst | macOS: dmg | Windows: msi"
-        required: false
-      installer_language:
-        description: "MSI language (e.g. en-US, zh-CN, ja-JP)"
-        required: false
-
-      # ═══ ADVANCED ═══
-      inject:
-        description: "Inject local CSS/JS (comma-separated paths)"
-        required: false
       hide_on_close:
-        description: "Hide to tray on close instead of exiting"
+        description: "Hide to tray instead of exiting"
         required: false
         type: boolean
         default: false
       start_to_tray:
-        description: "Start app minimized to system tray"
+        description: "Start minimized to tray"
         required: false
         type: boolean
         default: false
+
+      # ═══ FEATURES ═══
       enable_find:
-        description: "Enable in-page Find (Ctrl+F/Cmd+F)"
+        description: "In-page search (Ctrl+F/Cmd+F)"
         required: false
         type: boolean
         default: false
       enable_drag_drop:
-        description: "Enable drag & drop file upload"
+        description: "Drag & drop file upload"
         required: false
         type: boolean
         default: false
       ignore_certificate_errors:
-        description: "Ignore SSL/TLS certificate errors (internal certs)"
+        description: "Ignore SSL errors (internal certs)"
         required: false
         type: boolean
         default: false
       wasm:
-        description: "Enable WebAssembly support (Flutter Web, etc.)"
-        required: false
-        type: boolean
-        default: false
-      new_window:
-        description: "Allow sites to open new windows (auth flows)"
+        description: "WebAssembly support (Flutter, etc.)"
         required: false
         type: boolean
         default: false
       activation_shortcut:
-        description: "Shortcut to activate app (e.g. CtrlShiftV)"
+        description: "Hotkey to activate (e.g. CtrlShiftV)"
+        required: false
+
+      # ═══ BUILD ═══
+      keep_binary:
+        description: "Keep standalone binary"
+        required: false
+        type: boolean
+        default: false
+      installer_language:
+        description: "MSI language (e.g. en-US, vi-VN)"
+        required: false
+      inject:
+        description: "Inject CSS/JS (comma-separated paths)"
         required: false
 
 jobs:
@@ -220,36 +188,28 @@ jobs:
           
           [ -n "${{ inputs.width }}" ] && jq --arg v "${{ inputs.width }}" '.width = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.height }}" ] && jq --arg v "${{ inputs.height }}" '.height = ($v|tonumber)' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ -n "${{ inputs.icon }}" ] && jq --arg v "${{ inputs.icon }}" '.icon = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.app_version }}" ] && jq --arg v "${{ inputs.app_version }}" '.appVersion = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.title }}" ] && jq --arg v "${{ inputs.title }}" '.title = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.safe_domain }}" ] && jq --arg v "${{ inputs.safe_domain }}" '.safeDomain = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ -n "${{ inputs.proxy_url }}" ] && jq --arg v "${{ inputs.proxy_url }}" '.proxyUrl = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ -n "${{ inputs.user_agent }}" ] && jq --arg v "${{ inputs.user_agent }}" '.userAgent = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ -n "${{ inputs.targets }}" ] && jq --arg v "${{ inputs.targets }}" '.targets = ($v | split(","))' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.installer_language }}" ] && jq --arg v "${{ inputs.installer_language }}" '.installerLanguage = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ -n "${{ inputs.inject }}" ] && jq --arg v "${{ inputs.inject }}" '.inject = ($v | split(","))' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ -n "${{ inputs.activation_shortcut }}" ] && jq --arg v "${{ inputs.activation_shortcut }}" '.activationShortcut = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           
           # Booleans (camelCase!)
-          [ "${{ inputs.fullscreen }}" == "true" ] && jq '.fullscreen = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.maximize }}" == "true" ] && jq '.maximize = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.hide_title_bar }}" == "true" ] && jq '.hideTitleBar = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.always_on_top }}" == "true" ] && jq '.alwaysOnTop = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.dark_mode }}" == "true" ] && jq '.darkMode = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.incognito }}" == "true" ] && jq '.incognito = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.multi_window }}" == "true" ] && jq '.multiWindow = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.new_window }}" == "true" ] && jq '.newWindow = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.force_internal_navigation }}" == "true" ] && jq '.forceInternalNavigation = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.dark_mode }}" == "true" ] && jq '.darkMode = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.show_system_tray }}" == "true" ] && jq '.showSystemTray = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.debug }}" == "true" ] && jq '.debug = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.keep_binary }}" == "true" ] && jq '.keepBinary = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.hide_on_close }}" == "true" ] && jq '.hideOnClose = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.start_to_tray }}" == "true" ] && jq '.startToTray = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.enable_find }}" == "true" ] && jq '.enableFind = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.enable_drag_drop }}" == "true" ] && jq '.enableDragDrop = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.ignore_certificate_errors }}" == "true" ] && jq '.ignoreCertificateErrors = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           [ "${{ inputs.wasm }}" == "true" ] && jq '.wasm = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ "${{ inputs.new_window }}" == "true" ] && jq '.newWindow = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-          [ -n "${{ inputs.activation_shortcut }}" ] && jq --arg v "${{ inputs.activation_shortcut }}" '.activationShortcut = $v' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+          [ "${{ inputs.keep_binary }}" == "true" ] && jq '.keepBinary = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
           
           echo "=== Pake Config ==="
           cat "$CONFIG_FILE"
@@ -385,15 +345,16 @@ jobs:
           echo "| **URL** | ${{ inputs.url }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Platform** | ${{ inputs.platform }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Version** | ${{ inputs.app_version }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Dark Mode** | ${{ inputs.dark_mode }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Maximize** | ${{ inputs.maximize }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Dark Mode** | ${{ inputs.dark_mode }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Incognito** | ${{ inputs.incognito }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Multi Window** | ${{ inputs.multi_window }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Force Internal Nav** | ${{ inputs.force_internal_navigation }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **System Tray** | ${{ inputs.show_system_tray }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Hide on Close** | ${{ inputs.hide_on_close }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Start to Tray** | ${{ inputs.start_to_tray }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **In-page Find** | ${{ inputs.enable_find }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Incognito** | ${{ inputs.incognito }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Force Internal Nav** | ${{ inputs.force_internal_navigation }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Ignore SSL Errors** | ${{ inputs.ignore_certificate_errors }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Result** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Rust cache store
