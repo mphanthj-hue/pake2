@@ -173,7 +173,7 @@ pub fn run_app() {
     app_builder = app_builder
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::Launchd,
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None::<Vec<String>>,
         ))
         .plugin(tauri_plugin_clipboard_manager::init())

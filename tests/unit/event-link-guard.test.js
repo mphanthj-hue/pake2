@@ -94,6 +94,7 @@ function loadEventHelpers({
       createElement,
       getElementById: (id) => elementsById.get(id) || null,
       getElementsByTagName: () => [{ style: {} }],
+      head: createElement("head"),
       body,
       execCommand: () => {},
     },
