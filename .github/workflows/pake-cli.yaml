@@ -148,7 +148,6 @@ jobs:
         uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          node-version: ${{ env.NODE_VERSION }}
           package_json_file: package.json
 
       - name: Setup pnpm
